@@ -29,3 +29,13 @@ test('stock increases on purchases and decreases by cost, not sale price',()=>{
  assert.equal(calcStock(0,tx),4200000);
 });
 test('no sales or expenses means zero profit',()=>assert.equal(calcProfit([{type:'inbound',amountMinor:5000000}]),0));
+test('customer ledger exposes each transaction and cumulative balance', async()=>{
+ const {buildCustomerLedger}=await import('../src/ledger.js');
+ const rows=buildCustomerLedger(300000,[
+  {type:'sale',amountMinor:1200000,paidMinor:700000,createdAt:'2026-01-01T10:00:00.000Z'},
+  {type:'payment',amountMinor:200000,createdAt:'2026-01-02T10:00:00.000Z'},
+ ]);
+ assert.deepEqual(rows.map(r=>r.balanceMinor),[300000,800000,600000]);
+ assert.equal(rows[1].changeMinor,500000);
+ assert.equal(rows[2].changeMinor,-200000);
+});
