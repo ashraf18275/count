@@ -26,3 +26,16 @@ export const calcStock = (openingMinor, transactions) => transactions.reduce((su
   if (tx.type === 'stock_adjustment') return sum + tx.amountMinor;
   return sum;
 }, openingMinor);
+export const buildCustomerLedger = (openingMinor, transactions) => {
+  let balance = openingMinor;
+  const rows = [{type:'opening', amountMinor:openingMinor, changeMinor:openingMinor, balanceMinor:balance}];
+  const ordered = [...transactions].sort((a,b) => a.createdAt.localeCompare(b.createdAt));
+  for (const tx of ordered) {
+    let changeMinor = 0;
+    if (tx.type === 'sale') changeMinor = tx.amountMinor - (tx.paidMinor || 0);
+    else if (tx.type === 'payment' || tx.type === 'credit') changeMinor = -tx.amountMinor;
+    balance += changeMinor;
+    rows.push({...tx, changeMinor, balanceMinor:balance});
+  }
+  return rows;
+};
