@@ -1,0 +1,6 @@
+# Local or generated financial data must never be committed.
+tijara-backup-*.json
+*.sqlite
+*.db
+.DS_Store
+Thumbs.db
