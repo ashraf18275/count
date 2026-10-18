@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#202b70">
+<title>ألغاز النجوم</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,sans-serif;color:#fff;background:radial-gradient(circle at top,#4358b9,#17204f 68%,#101735);display:flex;justify-content:center}
+.app{width:min(100%,520px);padding:24px 20px 34px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+.top{width:100%;display:flex;justify-content:space-between;align-items:center}.logo{font-size:1.2rem;font-weight:800}.gear{border:1px solid #ffffff55;background:#ffffff16;color:white;border-radius:14px;font-size:1.35rem;width:48px;height:48px}
+h1{margin:34px 0 4px;font-size:2rem}.sub{margin:0;color:#d9e0ff}.score{margin:24px 0 18px;padding:12px 22px;background:#ffffff15;border:1px solid #ffffff25;border-radius:16px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:min(100%,340px);margin:8px auto 18px}.tile{aspect-ratio:1;border:1px solid #ffffff35;border-radius:22px;background:#ffffff14;color:#ffdc62;font-size:2.6rem;box-shadow:0 7px 0 #11183e;transition:transform .1s}.tile:active{transform:translateY(4px);box-shadow:0 3px 0 #11183e}.primary,.secondary{border:0;border-radius:16px;padding:15px 24px;font-weight:800;font-size:1rem}.primary{background:#ffdc62;color:#25264c;width:min(100%,340px)}.secondary{background:#ffffff15;color:white;border:1px solid #ffffff35;margin-top:12px;width:min(100%,340px)}.hint{color:#cbd4ff;font-size:.9rem;text-align:center;line-height:1.8;margin-top:22px}
+.overlay{position:fixed;inset:0;background:#070d2be8;display:none;align-items:center;justify-content:center;padding:22px}.dialog{width:min(100%,380px);background:#fff;color:#1b2454;border-radius:24px;padding:22px;box-shadow:0 20px 70px #0008}.dialog h2{margin-top:0}.setting{display:block;width:100%;text-align:right;padding:15px;margin:10px 0;border:1px solid #dce1f2;border-radius:14px;background:#f5f7ff;color:#202b70;font-weight:700;font-size:1rem}.close{background:#e8eaf6}.notice{font-size:.82rem;color:#6b7191;line-height:1.6}
+</style></head>
+<body><main class="app">
+<div class="top"><div class="logo">⭐ ألغاز النجوم</div><button class="gear" id="settings" aria-label="الإعدادات">⚙</button></div>
+<h1>تحدّي النجوم</h1><p class="sub">اضغط على النجوم واجمع النقاط</p>
+<div class="score">النقاط: <strong id="score">0</strong>　•　أفضل نتيجة: <strong id="best">0</strong></div>
+<div class="board" id="board"><button class="tile">★</button><button class="tile">✦</button><button class="tile">★</button><button class="tile">✧</button><button class="tile">★</button><button class="tile">✦</button><button class="tile">★</button><button class="tile">✧</button><button class="tile">★</button></div>
+<button class="primary" id="new">خلط النجوم ✨</button><button class="secondary" id="how">كيف ألعب؟</button>
+<p class="hint">لعبة خفيفة للتسلية وتنشيط التركيز.<br>يمكنك اللعب دون اتصال بالإنترنت.</p>
+</main>
+<div class="overlay" id="overlay"><div class="dialog"><h2>إعدادات اللعبة</h2><p>خصص تجربتك وإحصائياتك.</p>
+<button class="setting" id="stats">📊 إحصائيات اللعب</button>
+<button class="setting" id="sound">🔔 الصوت: مغلق</button>
+<button class="setting close" id="close">رجوع إلى اللعبة</button>
+<p class="notice">إحصائيات اللعب تفتح لوحة إضافية على هذا الجهاز.</p></div></div>
+<script>
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),tiles=[...document.querySelectorAll('.tile')];
+let score=0,best=Number(localStorage.getItem('star-puzzle-best')||0);bestEl.textContent=best;
+tiles.forEach((tile,i)=>tile.addEventListener('click',()=>{score+=i%3===1?2:1;scoreEl.textContent=score;if(score>best){best=score;bestEl.textContent=best;localStorage.setItem('star-puzzle-best',String(best));}tile.textContent=['✦','★','✧','🌟'][Math.floor(Math.random()*4)];}));
+document.getElementById('new').addEventListener('click',()=>{score=0;scoreEl.textContent='0';tiles.forEach(t=>t.textContent=['★','✦','✧'][Math.floor(Math.random()*3)]);});
+document.getElementById('how').addEventListener('click',()=>alert('اضغط على النجوم لجمع النقاط. كل ضغطة تزيد رصيدك!'));
+const overlay=document.getElementById('overlay');document.getElementById('settings').onclick=()=>overlay.style.display='flex';document.getElementById('close').onclick=()=>overlay.style.display='none';
+document.getElementById('sound').onclick=e=>e.currentTarget.textContent=e.currentTarget.textContent.includes('مغلق')?'🔔 الصوت: مفتوح':'🔔 الصوت: مغلق';
+document.getElementById('stats').onclick=()=>{location.href='https://appassets.androidplatform.net/assets/www/index.html';};
+</script></body></html>
