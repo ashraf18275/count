@@ -1,41 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {toMinor,fromMinor,balanceAfterSale,customerBalance,calcProfit,calcStock} from '../src/ledger.js';
-
-test('money converts to integer piastres without floating point drift',()=>{
- assert.equal(toMinor('50000'),5000000);
- assert.equal(toMinor('12.35'),1235);
- assert.equal(fromMinor(1235),12.35);
-});
-test('rejects negative and non-finite money',()=>{
- assert.throws(()=>toMinor(-1));
- assert.throws(()=>toMinor('abc'));
-});
-test('sale balance is correct and overpayment is rejected',()=>{
- assert.equal(balanceAfterSale(1200000,700000),500000);
- assert.throws(()=>balanceAfterSale(100,101));
-});
-test('customer ledger tracks credit sales and later collections',()=>{
- const tx=[{type:'sale',amountMinor:1200000,paidMinor:700000},{type:'sale',amountMinor:500000,paidMinor:0},{type:'payment',amountMinor:200000}];
- assert.equal(customerBalance(0,tx),800000);
- assert.equal(customerBalance(300000,tx),1100000);
-});
-test('profit equals sales minus cost of goods and expenses',()=>{
- const tx=[{type:'sale',amountMinor:1200000,costMinor:800000},{type:'expense',amountMinor:100000}];
- assert.equal(calcProfit(tx),300000);
-});
-test('stock increases on purchases and decreases by cost, not sale price',()=>{
- const tx=[{type:'inbound',amountMinor:5000000},{type:'sale',amountMinor:1200000,costMinor:800000}];
- assert.equal(calcStock(0,tx),4200000);
-});
+import {toMinor,fromMinor,balanceAfterSale,customerBalance,supplierBalance,calcProfit,calcStock,buildCustomerLedger,buildSupplierLedger} from '../src/ledger.js';
+test('money converts to integer piastres without floating point drift',()=>{assert.equal(toMinor('50000'),5000000);assert.equal(toMinor('12.35'),1235);assert.equal(fromMinor(1235),12.35);});
+test('rejects negative and non-finite money',()=>{assert.throws(()=>toMinor(-1));assert.throws(()=>toMinor('abc'));});
+test('sale balance is correct and overpayment is rejected',()=>{assert.equal(balanceAfterSale(1200000,700000),500000);assert.throws(()=>balanceAfterSale(100,101));});
+test('customer ledger tracks credit sales and later collections',()=>{const tx=[{type:'sale',amountMinor:1200000,paidMinor:700000},{type:'sale',amountMinor:500000,paidMinor:0},{type:'payment',amountMinor:200000}];assert.equal(customerBalance(0,tx),800000);assert.equal(customerBalance(300000,tx),1100000);});
+test('split cash and bank payments add once to the customer account',()=>{const tx=[{type:'sale',amountMinor:100000,paidMinor:60000,paidCashMinor:40000,paidBankMinor:20000},{type:'payment',amountMinor:30000,paidCashMinor:10000,paidBankMinor:20000}];assert.equal(customerBalance(0,tx),10000);});
+test('supplier debt is invoice value minus split payments and later settlements',()=>{const tx=[{type:'inbound',amountMinor:1000000,paidMinor:400000,paidCashMinor:250000,paidBankMinor:150000},{type:'supplier_payment',amountMinor:200000,paidCashMinor:50000,paidBankMinor:150000}];assert.equal(supplierBalance(0,tx),400000);assert.equal(supplierBalance(50000,tx),450000);});
+test('supplier statement provides running balances in transaction date order',()=>{const rows=buildSupplierLedger(0,[{type:'supplier_payment',amountMinor:20000,createdAt:'2026-01-02T10:00:00.000Z'},{type:'inbound',amountMinor:100000,paidMinor:30000,createdAt:'2026-01-01T10:00:00.000Z'}]);assert.deepEqual(rows.map(r=>r.balanceMinor),[0,70000,50000]);});
+test('profit equals sales minus cost of goods and expenses',()=>{assert.equal(calcProfit([{type:'sale',amountMinor:1200000,costMinor:800000},{type:'expense',amountMinor:100000}]),300000);});
+test('stock increases on purchases and decreases by cost, not sale price',()=>{assert.equal(calcStock(0,[{type:'inbound',amountMinor:5000000},{type:'sale',amountMinor:1200000,costMinor:800000}]),4200000);});
+test('customer ledger exposes each transaction and cumulative balance',()=>{const rows=buildCustomerLedger(300000,[{type:'sale',amountMinor:1200000,paidMinor:700000,createdAt:'2026-01-01T10:00:00.000Z'},{type:'payment',amountMinor:200000,createdAt:'2026-01-02T10:00:00.000Z'}]);assert.deepEqual(rows.map(r=>r.balanceMinor),[300000,800000,600000]);assert.equal(rows[1].changeMinor,500000);assert.equal(rows[2].changeMinor,-200000);});
 test('no sales or expenses means zero profit',()=>assert.equal(calcProfit([{type:'inbound',amountMinor:5000000}]),0));
-test('customer ledger exposes each transaction and cumulative balance', async()=>{
- const {buildCustomerLedger}=await import('../src/ledger.js');
- const rows=buildCustomerLedger(300000,[
-  {type:'sale',amountMinor:1200000,paidMinor:700000,createdAt:'2026-01-01T10:00:00.000Z'},
-  {type:'payment',amountMinor:200000,createdAt:'2026-01-02T10:00:00.000Z'},
- ]);
- assert.deepEqual(rows.map(r=>r.balanceMinor),[300000,800000,600000]);
- assert.equal(rows[1].changeMinor,500000);
- assert.equal(rows[2].changeMinor,-200000);
-});
