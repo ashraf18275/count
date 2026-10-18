@@ -1,6 +1,6 @@
 const DB_NAME='tijara-accounting';
-const DB_VERSION=1;
-const STORES=['customers','transactions','meta'];
+const DB_VERSION=2;
+const STORES=['customers','suppliers','transactions','meta'];
 export function openDB(){return new Promise((resolve,reject)=>{const request=indexedDB.open(DB_NAME,DB_VERSION);request.onupgradeneeded=()=>{const db=request.result;for(const store of STORES){if(!db.objectStoreNames.contains(store))db.createObjectStore(store,{keyPath:'id'});}};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
 export async function readAll(store){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close();});}
 export async function transact(stores,action){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(stores,'readwrite');let result;try{result=action(Object.fromEntries(stores.map(name=>[name,tx.objectStore(name)])));}catch(e){tx.abort();db.close();reject(e);return;}tx.oncomplete=()=>{db.close();resolve(result);};tx.onerror=()=>{const error=tx.error;db.close();reject(error);};tx.onabort=()=>{const error=tx.error;db.close();reject(error||new Error('تم إلغاء العملية'));};});}
