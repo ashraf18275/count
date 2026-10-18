@@ -2,7 +2,7 @@ import {readAll,transact,put,deleteAll,replaceAll} from './db.js';
 import {toMinor,fromMinor,calcProfit,calcStock,customerBalance,balanceAfterSale,buildCustomerLedger} from './ledger.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>new Intl.NumberFormat('ar-EG',{style:'currency',currency:'EGP',maximumFractionDigits:2}).format(fromMinor(n||0));
-const dateText=iso=>new Date(iso).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'}), now=()=>new Date().toISOString();
+const dateText=iso=>new Date(iso).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'}), now=()=>new Date().toISOString(), localDateKey=date=>{const d=date instanceof Date?date:new Date(date);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 let customers=[],transactions=[],toastTimer;
 function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -10,7 +10,7 @@ function balance(c){return customerBalance(c.openingMinor||0,transactions.filter
 function record(title,sub,amount,cls){return '<article class="record"><div><strong>'+esc(title)+'</strong><p>'+esc(sub)+'</p></div><span class="amount '+(cls||'')+'">'+money(amount)+'</span></article>';}
 function txLabel(t){return ({inbound:'وارد بضاعة',sale:'بيع',expense:'مصروف',payment:'تحصيل',stock_adjustment:'تسوية مخزون'}[t.type]||'معاملة');}
 function render(){
- const stock=calcStock(0,transactions),profit=calcProfit(transactions),today=new Date().toISOString().slice(0,10),todayTx=transactions.filter(t=>t.createdAt.slice(0,10)===today);
+ const stock=calcStock(0,transactions),profit=calcProfit(transactions),today=localDateKey(new Date()),todayTx=transactions.filter(t=>localDateKey(t.createdAt)===today);
  $('#stockValue').textContent=money(stock);
  $('#customerDebt').textContent=money(customers.reduce((s,c)=>s+Math.max(0,balance(c)),0));
  $('#todaySales').textContent=money(todayTx.filter(t=>t.type==='sale').reduce((s,t)=>s+t.amountMinor,0));
