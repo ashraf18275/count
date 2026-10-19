@@ -1,7 +1,7 @@
 name: Accounting tests
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-game-shell]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -19,3 +19,21 @@ jobs:
           node --check src/app.js
           node --check src/db.js
           node --check src/ledger.js
+      - name: Set up Java for Android APK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build Android APK after tests
+        run: gradle -p android assembleDebug
+      - name: Upload tested Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tijara-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
