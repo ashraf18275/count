@@ -48,6 +48,11 @@ async function pruneOldBackups(db, dbSdk, uid, keep = 5) {
   return { retained: Math.min(completed.length, keep), deleted: expired.length };
 }
 
+export async function createCloudAccount(email, password) {
+  const { authSdk, auth } = await services();
+  return authSdk.createUserWithEmailAndPassword(auth, email.trim(), password);
+}
+
 export async function signInWithEmail(email, password) {
   const { authSdk, auth } = await services();
   return authSdk.signInWithEmailAndPassword(auth, email.trim(), password);
