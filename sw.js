@@ -1,4 +1,4 @@
-const CACHE='tijara-accounting-v3';
+const CACHE='tijara-accounting-v4';
 const ASSETS=['./','./index.html','./styles.css','./manifest.webmanifest','./icon.svg','./src/app.js','./src/db.js','./src/ledger.js','./src/cloud-backup.js','./src/firebase-config.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))));
