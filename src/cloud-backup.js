@@ -31,6 +31,23 @@ function userPath(uid) {
   return ['users', uid, 'backups'];
 }
 
+async function pruneOldBackups(db, dbSdk, uid, keep = 5) {
+  const backupsRef = dbSdk.collection(db, ...userPath(uid));
+  const snapshot = await dbSdk.getDocs(dbSdk.query(backupsRef, dbSdk.orderBy('createdAt', 'desc')));
+  const completed = snapshot.docs.filter(item => item.data().status === 'complete');
+  const expired = completed.slice(keep);
+  for (const backup of expired) {
+    const records = await dbSdk.getDocs(dbSdk.collection(db, ...userPath(uid), backup.id, 'records'));
+    const refs = [...records.docs.map(item => item.ref), backup.ref];
+    for (let start = 0; start < refs.length; start += 400) {
+      const batch = dbSdk.writeBatch(db);
+      for (const ref of refs.slice(start, start + 400)) batch.delete(ref);
+      await batch.commit();
+    }
+  }
+  return { retained: Math.min(completed.length, keep), deleted: expired.length };
+}
+
 export async function signInWithEmail(email, password) {
   const { authSdk, auth } = await services();
   return authSdk.signInWithEmailAndPassword(auth, email.trim(), password);
@@ -92,7 +109,15 @@ export async function createCloudBackup(data, reason = 'manual') {
     // Incomplete uploads are never offered for restoration.
     throw new Error('لم يكتمل رفع النسخة السحابية؛ النسخة غير المكتملة لن تظهر للاستعادة. ' + error.message);
   }
-  return { id: snapshotId, createdAt: new Date().toISOString(), count: records.length };
+
+  let retention = { retained: null, deleted: 0 };
+  try {
+    retention = await pruneOldBackups(db, dbSdk, user.uid, 5);
+  } catch (error) {
+    // Retention cleanup must never turn a successfully uploaded backup into a reported failure.
+    console.warn('Cloud backup retention cleanup failed:', error);
+  }
+  return { id: snapshotId, createdAt: new Date().toISOString(), count: records.length, retention };
 }
 
 export async function listCloudBackups() {
@@ -100,7 +125,7 @@ export async function listCloudBackups() {
   const user = auth.currentUser;
   if (!user) throw new Error('سجّل الدخول إلى الحساب السحابي أولًا');
   const backupsRef = dbSdk.collection(db, ...userPath(user.uid));
-  const q = dbSdk.query(backupsRef, dbSdk.orderBy('createdAt', 'desc'), dbSdk.limit(40));
+  const q = dbSdk.query(backupsRef, dbSdk.orderBy('createdAt', 'desc'), dbSdk.limit(100));
   const result = await dbSdk.getDocs(q);
   return result.docs.map(item => ({ id: item.id, ...item.data() }))
     .filter(item => item.status === 'complete')
@@ -122,6 +147,12 @@ export async function restoreCloudBackup(snapshotId) {
   for (const item of result.docs) {
     const value = item.data();
     if (data[value.store] && value.data && typeof value.data === 'object') data[value.store].push(value.data);
+  }
+  if (data.customers.length !== Number(metadata.data().counts?.customers || 0)
+      || data.suppliers.length !== Number(metadata.data().counts?.suppliers || 0)
+      || data.transactions.length !== Number(metadata.data().counts?.transactions || 0)
+      || data.meta.length !== Number(metadata.data().counts?.meta || 0)) {
+    throw new Error('النسخة السحابية غير مكتملة أو لا تتطابق أعداد سجلاتها؛ لم يتم تغيير البيانات المحلية');
   }
   return { ...data, format: 'tijara-accounting-backup', version: 2, exportedAt: metadata.data().createdAt };
 }
