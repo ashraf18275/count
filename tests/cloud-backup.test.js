@@ -7,6 +7,7 @@ const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 test('cloud backup uses authenticated, user-scoped Firestore paths', async () => {
   const source = await read('../src/cloud-backup.js');
   assert.match(source, /signInWithEmailAndPassword/);
+  assert.match(source, /createUserWithEmailAndPassword/);
   assert.match(source, /\['users', uid, 'backups'\]/);
   assert.match(source, /status: 'uploading'/);
   assert.match(source, /status: 'complete'/);
@@ -27,6 +28,8 @@ test('cloud controls exist while local backup and restore remain available', asy
   const html = await read('../index.html');
   const app = await read('../src/app.js');
   assert.match(html, /id="cloudLoginBtn"/);
+  assert.match(html, /id="cloudCreateAccountBtn"/);
+  assert.ok(html.indexOf("نسخة ملف على Google Drive أو الجهاز") < html.indexOf("النسخ السحابي التلقائي عبر Firebase"));
   assert.match(html, /id="cloudBackupBtn"/);
   assert.match(html, /id="cloudRestoreBtn"/);
   assert.match(html, /id="exportBtn"/);
