@@ -32,3 +32,17 @@ test('sale invoice rejects empty line arrays and zero selling prices',()=>{asser
 test('opening stock contributes to available quantity without increasing financial stock value',()=>{const tx=[{type:'stock_opening',itemName:'سماعة',quantity:3,unitCostMinor:10000,amountMinor:0,createdAt:'2026-10-01T00:00:00.000Z'}];assert.equal(itemStockHalfUnits(tx,'سماعة'),6);assert.equal(inventoryItems(tx)[0].stockHalfUnits,6);assert.equal(calcStock(0,tx),0);});
 
 test('item names normalize repeated whitespace so stock matching is stable',()=>{assert.equal(normalizeItemName('  شاحن   سريع  '),normalizeItemName('شاحن سريع'));});
+
+
+test('historical sales still affect customer balance but are excluded from stock and profit', async () => {
+  const {calcStock,calcProfit,itemStockHalfUnits,customerBalance}=await import('../src/ledger.js');
+  const tx=[
+    {id:'in-old',type:'inbound',itemName:'شاحن',quantity:4,unitCostMinor:50000,amountMinor:200000,createdAt:'2026-01-01T00:00:00.000Z'},
+    {id:'old-sale',type:'sale',historical:true,customerId:'c1',amountMinor:150000,costMinor:0,paidMinor:50000,lineItems:[{itemName:'شاحن',quantity:2,unitPriceMinor:75000,unitCostMinor:0}],createdAt:'2026-01-02T00:00:00.000Z'},
+    {id:'new-sale',type:'sale',customerId:'c1',amountMinor:80000,costMinor:40000,paidMinor:0,lineItems:[{itemName:'شاحن',quantity:1,unitPriceMinor:80000,unitCostMinor:40000}],createdAt:'2026-10-19T00:00:00.000Z'}
+  ];
+  assert.equal(customerBalance(0,tx),180000);
+  assert.equal(itemStockHalfUnits(tx,'شاحن'),6);
+  assert.equal(calcStock(0,tx),160000);
+  assert.equal(calcProfit(tx),40000);
+});
