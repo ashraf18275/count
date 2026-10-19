@@ -1,5 +1,5 @@
 name: Build Android APK
-# Rebuild package for the latest accounting fixes on the feature branch, including safe form reset and customer removal.
+# Build a fresh APK for the latest accounting fixes on the feature branch.
 
 on:
   workflow_dispatch:
