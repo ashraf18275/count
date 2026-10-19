@@ -11,3 +11,5 @@
 .statement-line span{flex:1;min-width:0;color:#40534b}.statement-line bdi{font-weight:700;white-space:nowrap;text-align:left;unicode-bidi:isolate}
 .statement-note{overflow-wrap:anywhere;margin:8px 0!important}
 @media(min-width:560px){.editor-backdrop{align-items:center}}
+
+.sale-line{border:1px solid var(--line,#d5ddd8);border-radius:12px;padding:12px;margin:10px 0;display:grid;gap:10px}.sale-line-total{font-weight:700;margin:0}.remove-sale-line{background:#f7e8e6;color:#8b2e24}.computed-total{font-weight:800;font-size:1.1rem;padding:12px;border-radius:10px;background:#edf5f0}.computed-total output{display:inline-block}
