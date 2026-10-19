@@ -1,7 +1,7 @@
 name: Accounting tests
 on:
   push:
-    branches: [main, feature/android-game-shell, feature/customer-quantity-cloud-backup]
+    branches: [main, feature/android-game-shell, feature/customer-quantity-cloud-backup, feature/firebase-cloud-backup]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -17,6 +17,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check src/app.js
+          node --check src/cloud-backup.js
+          node --check src/firebase-config.js
           node --check src/db.js
           node --check src/ledger.js
       - name: Set up Java for Android APK
