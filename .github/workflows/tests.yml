@@ -1,7 +1,7 @@
 name: Accounting tests
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-game-shell]
   pull_request:
     branches: [main]
   workflow_dispatch:
