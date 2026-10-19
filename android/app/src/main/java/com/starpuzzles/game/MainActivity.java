@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(webView);
-        webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
+        webView.loadUrl("https://appassets.androidplatform.net/assets/launcher.html");
     }
 
     private class BackupBridge {
