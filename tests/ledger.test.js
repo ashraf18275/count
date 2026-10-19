@@ -19,7 +19,7 @@ test('createId always returns a non-empty key on Android WebView and modern brow
 test('sale overpayment first offsets prior customer debt, then creates customer credit if surplus remains',()=>{const oldDebt=200000;assert.equal(customerBalance(oldDebt,[{type:'sale',amountMinor:300000,paidMinor:500000}]),0);assert.equal(customerBalance(100000,[{type:'sale',amountMinor:300000,paidMinor:500000}]),-100000);});
 test('customer ledger labels can be derived from positive, negative, and zero running balances',()=>{const rows=buildCustomerLedger(200000,[{type:'sale',amountMinor:300000,paidMinor:500000,createdAt:'2026-10-19T10:00:00.000Z'}]);assert.deepEqual(rows.map(r=>r.balanceMinor),[200000,0]);const credit=buildCustomerLedger(0,[{type:'sale',amountMinor:300000,paidMinor:500000,createdAt:'2026-10-19T10:00:00.000Z'}]);assert.equal(credit[1].balanceMinor,-200000);});
 
-import {quantityToHalfUnits,itemStockHalfUnits,inventoryItems,saleLineTotals,saleInvoiceTotals} from '../src/ledger.js';
+import {quantityToHalfUnits,itemStockHalfUnits,inventoryItems,saleLineTotals,saleInvoiceTotals,normalizeItemName} from '../src/ledger.js';
 test('inventory quantities support half pieces and reject invalid fractions',()=>{assert.equal(quantityToHalfUnits(0.5),1);assert.equal(quantityToHalfUnits(2.5),5);assert.throws(()=>quantityToHalfUnits(0.25));assert.throws(()=>quantityToHalfUnits(0));});
 test('inventory stock is calculated per item and sales deduct exact half-piece quantities',()=>{const tx=[{id:'i1',type:'inbound',itemName:'شاحن',quantity:4,unitCostMinor:50000,createdAt:'2026-10-01T00:00:00.000Z'},{id:'s1',type:'sale',lineItems:[{itemName:'شاحن',quantity:0.5}],createdAt:'2026-10-02T00:00:00.000Z'}];assert.equal(itemStockHalfUnits(tx,'شاحن'),7);assert.equal(inventoryItems(tx)[0].stockHalfUnits,7);});
 test('sale line total and cost are calculated from unit prices and fractional quantity',()=>{assert.deepEqual(saleLineTotals({quantity:0.5,unitPriceMinor:70000,unitCostMinor:50000}),{amountMinor:35000,costMinor:25000});});
@@ -29,3 +29,5 @@ test('multi-item sale deducts stock independently for each item',()=>{const tx=[
 test('sale invoice rejects empty line arrays and zero selling prices',()=>{assert.throws(()=>saleInvoiceTotals([]));assert.throws(()=>saleInvoiceTotals([{quantity:1,unitPriceMinor:0,unitCostMinor:10}]));});
 
 test('opening stock contributes to available quantity without increasing financial stock value',()=>{const tx=[{type:'stock_opening',itemName:'سماعة',quantity:3,unitCostMinor:10000,amountMinor:0,createdAt:'2026-10-01T00:00:00.000Z'}];assert.equal(itemStockHalfUnits(tx,'سماعة'),6);assert.equal(inventoryItems(tx)[0].stockHalfUnits,6);assert.equal(calcStock(0,tx),0);});
+
+test('item names normalize repeated whitespace so stock matching is stable',()=>{assert.equal(normalizeItemName('  شاحن   سريع  '),normalizeItemName('شاحن سريع'));});
