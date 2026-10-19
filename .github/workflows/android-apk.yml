@@ -4,7 +4,7 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup]
+    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup, feature/historical-sales-migration]
     paths:
       - "android/**"
       - "index.html"
