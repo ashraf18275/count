@@ -1,7 +1,7 @@
 name: Accounting tests
 on:
   push:
-    branches: [main, feature/android-game-shell, feature/customer-quantity-cloud-backup, feature/firebase-cloud-backup]
+    branches: [main, feature/android-game-shell, feature/customer-quantity-cloud-backup, feature/firebase-cloud-backup, feature/historical-sales-migration]
   pull_request:
     branches: [main]
   workflow_dispatch:
