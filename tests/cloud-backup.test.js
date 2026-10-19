@@ -36,6 +36,10 @@ test('cloud controls exist while local backup and restore remain available', asy
   assert.match(html, /id="localSafetySelect"/);
   assert.match(html, /id="localSafetyRestoreBtn"/);
   assert.match(app, /createLocalSafetyBackup/);
+  const sw = await read('../sw.js');
+  assert.match(sw, /tijara-accounting-v3/);
+  assert.match(sw, /src\/cloud-backup\.js/);
+  assert.match(sw, /src\/firebase-config\.js/);
 });
 
 test('Firebase SDK is loaded lazily so the local app can still start offline', async () => {
