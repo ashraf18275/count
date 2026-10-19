@@ -1,0 +1,47 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.starpuzzles.game"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.starpuzzles.game"
+        minSdk 23
+        targetSdk 35
+        versionCode 3
+        versionName "1.2"
+    }
+
+    sourceSets {
+        main.assets.srcDirs += [layout.buildDirectory.dir("generated/web-assets").get().asFile]
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.webkit:webkit:1.12.1"
+}
+
+def webRoot = rootProject.projectDir.parentFile
+
+tasks.register("syncWebAssets", Copy) {
+    from(webRoot) {
+        include "index.html"
+        include "styles.css"
+        include "manifest.webmanifest"
+        include "icon.svg"
+        include "sw.js"
+        include "src/**"
+    }
+    into(layout.buildDirectory.dir("generated/web-assets/www"))
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("syncWebAssets")
+}
