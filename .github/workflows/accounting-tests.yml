@@ -25,5 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Check JavaScript syntax
+        run: node --check src/app.js && node --check src/db.js && node --check src/ledger.js
       - name: Run accounting tests
         run: npm test
