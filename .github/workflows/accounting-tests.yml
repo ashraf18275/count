@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [feature/historical-sales-migration]
   push:
-    branches: [feature/full-edit-delete-controls]
+    branches: [feature/full-edit-delete-controls, fix/restore-delete-webview-compatibility]
     paths:
       - "src/**"
       - "tests/**"
