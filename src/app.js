@@ -114,6 +114,7 @@ async function saveEditor(){
    const duplicate=list.some(x=>x.id!==id&&x.name.trim().toLocaleLowerCase()===name.toLocaleLowerCase());if(duplicate)return toast('هذا الاسم مسجل بالفعل');
    const updated={...record,name,note:String(f.get('note')||'').trim()};
    if(kind==='customer'||f.has('opening'))updated.openingMinor=toMinor(f.get('opening')||0);
+   await createLocalSafetyBackup('قبل تعديل '+(kind==='customer'?'العميل ':'المورد ')+record.name);
    await put(kind==='customer'?'customers':'suppliers',updated);
   }else{
    const t=transactions.find(x=>x.id===id);if(!t)return closeEditor();const updated={...t,note:String(f.get('note')||'').trim()};
@@ -131,7 +132,7 @@ async function saveEditor(){
    }
    if(t.type==='sale'){
     if(!updated.customerId)return toast('اختر العميل');
-    const lines=(t.lineItems||[]).map((line,i)=>{const itemName=String(f.get('lineName'+i)||'').trim(),quantity=Number(f.get('lineQuantity'+i)||0),unitPriceMinor=toMinor(f.get('linePrice'+i)||0);if(!itemName||quantity<=0)throw new Error('أكمل اسم الصنف والكمية لكل بند');quantityToHalfUnits(quantity);const unitCostMinor=t.historical?0:(line.unitCostMinor||0);const totals=saleLineTotals({quantity,unitPriceMinor,unitCostMinor});return {itemName,quantity,unitPriceMinor,unitCostMinor,amountMinor:totals.amountMinor,costMinor:totals.costMinor};});
+    const lines=(t.lineItems||[]).map((line,i)=>{const itemName=String(f.get('lineName'+i)||'').trim(),quantity=Number(f.get('lineQuantity'+i)||0),unitPriceMinor=toMinor(f.get('linePrice'+i)||0);if(!itemName||quantity<=0)throw new Error('أكمل اسم الصنف والكمية لكل بند');quantityToHalfUnits(quantity);const unitCostMinor=t.historical?0:(itemName===line.itemName?(line.unitCostMinor||0):lastCostForItem(itemName));const totals=saleLineTotals({quantity,unitPriceMinor,unitCostMinor});return {itemName,quantity,unitPriceMinor,unitCostMinor,amountMinor:totals.amountMinor,costMinor:totals.costMinor};});
     if(!lines.length)return toast('لا توجد أصناف في الفاتورة');updated.lineItems=lines;updated.itemName=lines.map(x=>x.itemName).join('، ');updated.quantity=lines.reduce((n,x)=>n+x.quantity,0);updated.amountMinor=lines.reduce((n,x)=>n+x.amountMinor,0);updated.costMinor=t.historical?0:lines.reduce((n,x)=>n+x.costMinor,0);
     const cash=toMinor(f.get('cash')||0),vodafone=toMinor(f.get('vodafone')||0);updated.paidCashMinor=cash;updated.paidVodafoneMinor=vodafone;updated.paidMinor=cash+vodafone;if(updated.paidMinor>updated.amountMinor)return toast('إجمالي التحصيل أكبر من قيمة الفاتورة');
    }
@@ -140,6 +141,7 @@ async function saveEditor(){
     if(f.has('cash')){updated.paidCashMinor=cash;updated.paidVodafoneMinor=vodafone;updated.amountMinor=total;}else if(f.has('amount'))updated.amountMinor=toMinor(f.get('amount')||0);
    }
    if(t.type==='expense'||t.type==='stock_adjustment'||t.type==='credit'){if(f.has('amount'))updated.amountMinor=toMinor(f.get('amount')||0);if(f.has('category')){updated.category=String(f.get('category')||'').trim();if(!updated.category)return toast('نوع المصروف مطلوب');}}
+   await createLocalSafetyBackup('قبل تعديل '+txLabel(t));
    await put('transactions',updated);
   }
   closeEditor();await refresh();toast('تم الحفظ وإعادة احتساب المخزون والأرصدة والتقارير');
