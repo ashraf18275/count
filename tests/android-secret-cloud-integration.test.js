@@ -25,6 +25,14 @@ test('the hidden accounting screen contains cloud backup controls and handlers',
   }
 });
 
+test('Android WebView presents JavaScript confirmations used by delete and restore actions', () => {
+  const activity = read('../android/app/src/main/java/com/starpuzzles/game/MainActivity.java');
+  assert.match(activity, /setWebChromeClient\(new WebChromeClient\(\)/);
+  assert.match(activity, /onJsConfirm\(/);
+  assert.match(activity, /result\.confirm\(\)/);
+  assert.match(activity, /result\.cancel\(\)/);
+});
+
 test('Android declares internet access for Firebase authentication and Firestore', () => {
   const manifest = read('../android/app/src/main/AndroidManifest.xml');
   assert.match(manifest, /uses-permission android:name="android\.permission\.INTERNET"/);
