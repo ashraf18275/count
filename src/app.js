@@ -90,7 +90,7 @@ function openEditor(kind,id){
    fields+='<p class="notice">سيُعاد حساب قيمة الفاتورة من الكمية وتكلفة القطعة. لتصفير أثر عملية تجريبية بالكامل استخدم حذف العملية بعد التأكيد.</p>';
   }else if(obj.type==='sale'){
    fields+=editorSelect('العميل','customerId',obj.customerId||'',customers);
-   for(let i=0;i<(obj.lineItems||[]).length;i++){const line=obj.lineItems[i];fields+='<fieldset><legend>الصنف '+(i+1)+'</legend>'+editorField('اسم الصنف','lineName'+i,line.itemName||'')+editorField('الكمية بالقطعة','lineQuantity'+i,line.quantity||0,'number','step="0.5" min="0.5"')+editorField('سعر بيع القطعة بالجنيه','linePrice'+i,fromMinor(line.unitPriceMinor||0),'number','step="0.01" min="0")+'</fieldset>';}
+   for(let i=0;i<(obj.lineItems||[]).length;i++){const line=obj.lineItems[i];fields+='<fieldset><legend>الصنف '+(i+1)+'</legend>'+editorField('اسم الصنف','lineName'+i,line.itemName||'')+editorField('الكمية بالقطعة','lineQuantity'+i,line.quantity||0,'number','step="0.5" min="0.5"')+editorField('سعر بيع القطعة بالجنيه','linePrice'+i,fromMinor(line.unitPriceMinor||0),'number','step="0.01" min="0"')+'</fieldset>';}
    fields+=editorField('المدفوع نقدًا بالجنيه','cash',fromMinor(obj.paidCashMinor||0),'number','step="0.01" min="0"')+editorField('المدفوع بفودافون كاش بالجنيه','vodafone',fromMinor(obj.paidVodafoneMinor||0),'number','step="0.01" min="0"');
    if(obj.historical)fields+='<p class="notice">هذه فاتورة تاريخية؛ سيظل تعديلها خارج خصم المخزون وأرباح الفترة الجديدة.</p>';
   }else if(obj.type==='payment'||obj.type==='credit'){
