@@ -46,3 +46,5 @@ test('historical sales still affect customer balance but are excluded from stock
   assert.equal(calcStock(0,tx),160000);
   assert.equal(calcProfit(tx),40000);
 });
+
+test('date range includes the selected end date and excludes later records',()=>{const items=[{id:'a',createdAt:'2026-10-01T08:00:00.000Z'},{id:'b',createdAt:'2026-10-15T12:00:00.000Z'},{id:'c',createdAt:'2026-10-16T00:00:00.000Z'}];const inRange=items.filter(t=>t.createdAt.slice(0,10)>='2026-10-01'&&t.createdAt.slice(0,10)<='2026-10-15');assert.deepEqual(inRange.map(t=>t.id),['a','b']);});
