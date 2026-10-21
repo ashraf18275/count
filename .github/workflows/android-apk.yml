@@ -3,8 +3,10 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [feature/historical-sales-migration]
   push:
-    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup, feature/historical-sales-migration]
+    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup, feature/historical-sales-migration, feature/full-edit-delete-controls]
     paths:
       - "android/**"
       - "index.html"
@@ -35,6 +37,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Preserve debug signing key between builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: tijara-android-debug-signing-v1
 
       - name: Build debug APK
         run: gradle -p android assembleDebug

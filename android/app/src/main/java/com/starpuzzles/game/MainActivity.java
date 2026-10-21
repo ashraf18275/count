@@ -2,10 +2,13 @@ package com.starpuzzles.game;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -46,6 +49,32 @@ public class MainActivity extends Activity {
         webView.getSettings().setAllowContentAccess(true);
         webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         webView.addJavascriptInterface(new BackupBridge(), "AndroidBackup");
+        // Android WebView does not display JavaScript confirm()/alert() dialogs by default.
+        // The accounting UI relies on confirm() to guard deletes and backup restores.
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("تأكيد العملية")
+                    .setMessage(message)
+                    .setPositiveButton("متابعة", (dialog, which) -> result.confirm())
+                    .setNegativeButton("إلغاء", (dialog, which) -> result.cancel())
+                    .setOnCancelListener(dialog -> result.cancel())
+                    .show();
+                return true;
+            }
+
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("تنبيه")
+                    .setMessage(message)
+                    .setPositiveButton("حسنًا", (dialog, which) -> result.confirm())
+                    .setOnCancelListener(dialog -> result.confirm())
+                    .show();
+                return true;
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
