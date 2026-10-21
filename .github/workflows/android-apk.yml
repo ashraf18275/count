@@ -1,5 +1,6 @@
 name: Build Android APK
 # Build a fresh APK for the latest accounting fixes on the feature branch.
+# Signing cache is intentionally stable across push-triggered builds on this branch.
 
 on:
   workflow_dispatch:
