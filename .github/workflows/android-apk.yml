@@ -1,5 +1,6 @@
 name: Build Android APK
 # Build APKs with one persistent debug signing key on this branch.
+# The CI job verifies the APK signer against the cached keystore on every build.
 # This stabilizes signatures between future CI builds; it does not recover the
 # private key used to sign any APK already installed on a user's device.
 
