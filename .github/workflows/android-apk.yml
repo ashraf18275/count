@@ -1,6 +1,7 @@
 name: Build Android APK
-# Build a fresh APK for the latest accounting fixes on the feature branch.
-# Signing cache is intentionally stable across push-triggered builds on this branch.
+# Build APKs with one persistent debug signing key on this branch.
+# This stabilizes signatures between future CI builds; it does not recover the
+# private key used to sign any APK already installed on a user's device.
 
 on:
   workflow_dispatch:
@@ -38,11 +39,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+
       - name: Restore debug signing key between builds
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: tijara-android-debug-signing-v1
+          key: tijara-android-debug-signing-v2-${{ runner.os }}
 
       - name: Ensure debug signing key exists before building
         shell: bash
@@ -57,9 +59,23 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US" \
               -keyalg RSA -keysize 2048 -validity 10000
           fi
+          keytool -list -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey
 
       - name: Build debug APK
         run: gradle -p android assembleDebug
+
+      - name: Verify APK was signed with the persistent debug key
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          EXPECTED="$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey | awk '/SHA1:/{print $2; exit}' | tr -d ':')"
+          ACTUAL="$(keytool -printcert -jarfile "$APK" | awk '/SHA1:/{print $2; exit}' | tr -d ':')"
+          echo "Expected signer SHA-1: $EXPECTED"
+          echo "APK JAR signer SHA-1: $ACTUAL"
+          if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::APK signer does not match the persistent debug keystore."
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
