@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {toMinor,fromMinor,balanceAfterSale,customerBalance,supplierBalance,calcProfit,calcStock,buildCustomerLedger,buildSupplierLedger} from '../src/ledger.js';
+import {filterTransactionsByDateRange,summarizePeriod} from '../src/reporting.js';
 test('money converts to integer piastres without floating point drift',()=>{assert.equal(toMinor('50000'),5000000);assert.equal(toMinor('12.35'),1235);assert.equal(fromMinor(1235),12.35);});
 test('rejects negative and non-finite money',()=>{assert.throws(()=>toMinor(-1));assert.throws(()=>toMinor('abc'));});
 test('sale balance allows overpayment and represents customer credit as a negative balance',()=>{assert.equal(balanceAfterSale(1200000,700000),500000);assert.equal(balanceAfterSale(100,150),-50);assert.throws(()=>balanceAfterSale(100,-1));});
@@ -47,4 +48,15 @@ test('historical sales still affect customer balance but are excluded from stock
   assert.equal(calcProfit(tx),40000);
 });
 
-test('date range includes the selected end date and excludes later records',()=>{const items=[{id:'a',createdAt:'2026-10-01T08:00:00.000Z'},{id:'b',createdAt:'2026-10-15T12:00:00.000Z'},{id:'c',createdAt:'2026-10-16T00:00:00.000Z'}];const inRange=items.filter(t=>t.createdAt.slice(0,10)>='2026-10-01'&&t.createdAt.slice(0,10)<='2026-10-15');assert.deepEqual(inRange.map(t=>t.id),['a','b']);});
+test('date-range helper includes both boundaries and summarizes only selected operations',()=>{
+ const items=[
+  {id:'a',type:'sale',createdAt:'2026-10-01T08:00:00.000Z',amountMinor:10000,costMinor:4000},
+  {id:'b',type:'expense',createdAt:'2026-10-15T12:00:00.000Z',amountMinor:2000},
+  {id:'c',type:'sale',createdAt:'2026-10-16T00:00:00.000Z',amountMinor:5000,costMinor:2000},
+  {id:'d',type:'sale',historical:true,createdAt:'2026-10-10T12:00:00.000Z',amountMinor:9000,costMinor:6000}
+ ];
+ const period=filterTransactionsByDateRange(items,'2026-10-01','2026-10-15');
+ assert.deepEqual(period.map(t=>t.id),['a','b','d']);
+ assert.deepEqual(summarizePeriod(period),{sales:19000,saleCost:4000,expenses:2000,purchases:0,customerCollections:0,supplierPayments:0,profit:4000,count:3});
+ assert.deepEqual(filterTransactionsByDateRange(items,'2026-10-16','2026-10-01'),[]);
+});
