@@ -26,6 +26,6 @@ jobs:
         with:
           node-version: "22"
       - name: Check JavaScript syntax
-        run: node --check src/app.js && node --check src/db.js && node --check src/ledger.js
+        run: node --check src/app.js && node --check src/db.js && node --check src/ledger.js && node --check src/reporting.js
       - name: Run accounting tests
         run: npm test
