@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [feature/historical-sales-migration]
   push:
-    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup, feature/historical-sales-migration, feature/full-edit-delete-controls]
+    branches: [main, feature/android-game-shell, feature/firebase-cloud-backup, feature/historical-sales-migration, feature/full-edit-delete-controls, feature/report-date-range-safe-update]
     paths:
       - "android/**"
       - "index.html"
