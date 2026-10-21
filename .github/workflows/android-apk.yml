@@ -37,11 +37,25 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Preserve debug signing key between builds
+      - name: Restore debug signing key between builds
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
           key: tijara-android-debug-signing-v1
+
+      - name: Ensure debug signing key exists before building
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -keyalg RSA -keysize 2048 -validity 10000
+          fi
 
       - name: Build debug APK
         run: gradle -p android assembleDebug
